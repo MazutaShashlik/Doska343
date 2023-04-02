@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/imageProduct"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:onClick="onClickImage"
+        android:src="@android:drawable/ic_menu_gallery"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:srcCompat="@android:drawable/ic_menu_gallery" />
+
+
+    <EditText
+        android:id="@+id/idTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:ems="10"
+        android:hint="@string/edit_ac_title"
+        android:inputType="textPersonName"
+        android:paddingRight="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/imageProduct"
+        app:layout_constraintTop_toBottomOf="@+id/spinner" />
+
+    <EditText
+        android:id="@+id/idPrice"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/edit_ac_price"
+        android:inputType="textPersonName"
+        android:paddingRight="16dp"
+        app:layout_constraintEnd_toEndOf="@+id/idTitle"
+        app:layout_constraintStart_toStartOf="@+id/idTitle"
+        app:layout_constraintTop_toBottomOf="@+id/idTitle" />
+
+    <EditText
+        android:id="@+id/idPhone"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/edit_ac_tel"
+        android:inputType="textPersonName"
+        android:paddingRight="16dp"
+        app:layout_constraintEnd_toEndOf="@+id/idPrice"
+        app:layout_constraintStart_toStartOf="@+id/idPrice"
+        app:layout_constraintTop_toBottomOf="@+id/idPrice" />
+
+    <EditText
+        android:id="@+id/idDesc"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="10dp"
+        android:ems="10"
+        android:gravity="top"
+        android:hint="@string/edit_ac_desc"
+        android:inputType="textMultiLine|textPersonName"
+        android:paddingRight="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/idPhone"
+        app:layout_constraintStart_toStartOf="@+id/idPhone"
+        app:layout_constraintTop_toBottomOf="@+id/idPhone" />
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@android:drawable/spinner_background"
+        app:layout_constraintEnd_toEndOf="@+id/imageProduct"
+        app:layout_constraintStart_toStartOf="@+id/imageProduct"
+        app:layout_constraintTop_toBottomOf="@+id/imageProduct" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:clickable="true"
+        android:onClick="onClickSavePost"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_save" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

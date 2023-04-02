@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "773880535251",
+    "firebase_url": "https://weatherkyznetsov-default-rtdb.firebaseio.com",
+    "project_id": "weatherkyznetsov",
+    "storage_bucket": "weatherkyznetsov.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773880535251:android:c7a1310d5401cbad04dc26",
+        "android_client_info": {
+          "package_name": "com.example.tableobv"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773880535251-v275lp38fqq0s5vhggcau0idg5fnukhh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2B3XzlPoXq9ZOE6jMnT9630US_yThAS0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773880535251-v275lp38fqq0s5vhggcau0idg5fnukhh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
