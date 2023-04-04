@@ -22,4 +22,11 @@
 
     <string name="toggle_open">Open</string>
     <string name="toggle_close">Close</string>
+
+    <string name="del">Удалить объявление</string>
+    <string name="del_mes">Точно удалить объявление?</string>
+
+    <string name="no">Нет</string>
+    <string name="yes">Да</string>
+
 </resources>

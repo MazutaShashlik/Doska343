@@ -27,21 +27,27 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public class EditActivity extends AppCompatActivity {
 
-    private ImageView imItem;
     private StorageReference mStorageRef;
+    private ImageView imgItem;
     private Uri uploadUri;
     private Spinner spinner;
-    private EditText edTitle, edPrice, edTel, edDisc;
-
-    private FirebaseAuth mAuth;
-
     private DatabaseReference dRef;
+    private FirebaseAuth mAuth;
+    private EditText editTitle, editPrice, editPhone, editDesc;
+    private  Boolean edit_state = false;
+    private String temp_cat = "";
+    private String temp_uid = "";
+    private String temp_time = "";
+    private String temp_key = "";
+    private String temp_image_url = "";
+    private Boolean is_image_update = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,41 +57,64 @@ public class EditActivity extends AppCompatActivity {
     }
     private void init()
     {
-        edTitle = findViewById(R.id.idTitle);
-        edDisc = findViewById(R.id.idDesc);
-        edPrice = findViewById(R.id.idPrice);
-        edTel = findViewById(R.id.idPhone);
+        editTitle = findViewById(R.id.idTitle);
+        editPrice = findViewById(R.id.idPrice);
+        editPhone = findViewById(R.id.idPhone);
+        editDesc = findViewById(R.id.idDesc);
 
         spinner = findViewById(R.id.spinner);
-        ArrayAdapter<CharSequence> adapter  = ArrayAdapter.createFromResource(this,R.array.category_spin, android.R.layout.simple_spinner_item);
-
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.category_spin, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        spinner.getSelectedItem();
         mStorageRef = FirebaseStorage.getInstance().getReference("Images");
-        imItem = findViewById(R.id.imageProduct);
+        imgItem = findViewById(R.id.imageProduct);
+        getMyIntent();
     }
+    private void getMyIntent()
+    {
+        if(getIntent() != null)
+        {
+            Intent i = getIntent();
+            edit_state = i.getBooleanExtra(MyConstans.EDIT_STATE, false);
+            if(edit_state)setDataAds(i);
+        }
+    }
+    private void setDataAds(Intent i)
+    {
+        editPhone.setText(i.getStringExtra(MyConstans.TEL));
+        editTitle.setText(i.getStringExtra(MyConstans.TITLE));
+        editPrice.setText(i.getStringExtra(MyConstans.PRICE));
+        editDesc.setText(i.getStringExtra(MyConstans.DESC));
+        Picasso.get().load(i.getStringExtra(MyConstans.IMAGE_ID)).into(imgItem);
+        temp_cat= i.getStringExtra(MyConstans.CAT);
+        temp_uid= i.getStringExtra(MyConstans.UID);
+        temp_time= i.getStringExtra(MyConstans.TIME);
+        temp_key= i.getStringExtra(MyConstans.KEY);
+        temp_image_url= i.getStringExtra(MyConstans.IMAGE_ID);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 10 && data != null && data.getData() != null)
+        if(requestCode == 10 && data != null && data.getData() != null)
         {
             if(resultCode == RESULT_OK)
             {
-                imItem.setImageURI(data.getData());
-                uploadImage();
+                imgItem.setImageURI(data.getData());
+                is_image_update = true;
             }
         }
     }
 
     private void uploadImage()
     {
-        Bitmap bitMap = ((BitmapDrawable)imItem.getDrawable()).getBitmap();
-        ByteArrayOutputStream out  = new ByteArrayOutputStream();
-        bitMap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-        byte[] byteArray= out.toByteArray();
+        Bitmap bitmap = ((BitmapDrawable)imgItem.getDrawable()).getBitmap();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        byte[] byteArray = out.toByteArray();
         final StorageReference mRef = mStorageRef.child(System.currentTimeMillis() + "_image");
-        UploadTask up =mRef.putBytes(byteArray);
+        UploadTask up = mRef.putBytes(byteArray);
         Task<Uri> task = up.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
@@ -95,8 +124,9 @@ public class EditActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
                 uploadUri = task.getResult();
-                Toast.makeText(EditActivity.this, "upload done: " + uploadUri.toString(), Toast.LENGTH_SHORT).show();
-
+                assert uploadUri != null;
+                savePost();
+                Toast.makeText(EditActivity.this, "Upload done", Toast.LENGTH_SHORT).show();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -104,12 +134,56 @@ public class EditActivity extends AppCompatActivity {
 
             }
         });
-    }
 
+    }
+    private void uploadUpdateImage()
+    {
+        Bitmap bitmap = ((BitmapDrawable)imgItem.getDrawable()).getBitmap();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        byte[] byteArray = out.toByteArray();
+        final StorageReference mRef = FirebaseStorage.getInstance().getReferenceFromUrl(temp_image_url);
+        UploadTask up = mRef.putBytes(byteArray);
+        Task<Uri> task = up.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                return mRef.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                uploadUri = task.getResult();
+                assert uploadUri != null;
+                temp_image_url = uploadUri.toString();
+                updatePost();
+                Toast.makeText(EditActivity.this, "Upload done", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+
+    }
     public void onClickSavePost(View view)
     {
-        SavePost();
-
+        if(!edit_state)
+        {
+            uploadImage();
+        }
+        else
+        {
+            if(is_image_update)
+            {
+                uploadUpdateImage();
+            }
+            else
+            {
+                updatePost();
+            }
+        }
+        finish();
     }
 
     public void onClickImage(View view)
@@ -117,32 +191,50 @@ public class EditActivity extends AppCompatActivity {
         getImage();
     }
 
-    private void  getImage()
+    private void getImage()
     {
-        Intent intent  = new Intent();
-        intent.setType("image/");
+        Intent intent = new Intent();
+        intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(intent, 10);
     }
-
-    private void SavePost()
+    private void savePost()
+    {
+        dRef = FirebaseDatabase.getInstance().getReference(spinner.getSelectedItem().toString());
+        mAuth = FirebaseAuth.getInstance();
+        if(mAuth.getUid() != null)
         {
-            dRef  = FirebaseDatabase.getInstance().getReference(spinner.getSelectedItem().toString());
-            mAuth = FirebaseAuth.getInstance();
+            String key = dRef.push().getKey();
+            NewPost post = new NewPost();
 
-
-            if(mAuth.getUid() != null){
-
-                String key = dRef.push().getKey();
-                NewPost post = new NewPost();
-
-                post.setImageID(uploadUri.toString());
-                post.setTitle(edTitle.getText().toString());
-                post.setTell(edTel.getText().toString());
-                post.setPrice(edPrice.getText().toString());
-                post.setDisc(edDisc.getText().toString());
-                post.setKey(key);
-                if(key!= null)dRef.child(mAuth.getUid()).child(key).setValue(post);
-            }
+            post.setImageId(uploadUri.toString());
+            post.setTitle(editTitle.getText().toString());
+            post.setPrice(editPrice.getText().toString());
+            post.setTel(editPhone.getText().toString());
+            post.setDisc(editDesc.getText().toString());
+            post.setKey(key);
+            post.setCat(spinner.getSelectedItem().toString());
+            post.setTime(String.valueOf(System.nanoTime()));
+            post.setUid(mAuth.getUid());
+            if(key != null)dRef.child(key).child("ad").setValue(post);
         }
+    }
+    private void updatePost()
+    {
+        dRef = FirebaseDatabase.getInstance().getReference(temp_cat);
+        NewPost post = new NewPost();
+
+        post.setTitle(editTitle.getText().toString());
+        post.setPrice(editPrice.getText().toString());
+        post.setTel(editPhone.getText().toString());
+        post.setDisc(editDesc.getText().toString());
+        post.setKey(temp_key);
+        post.setCat(temp_cat);
+        post.setTime(temp_time);
+        post.setUid(temp_uid);
+        post.setImageId(temp_image_url);
+        dRef.child(temp_key).child("ad").setValue(post);
+
+    }
+
 }

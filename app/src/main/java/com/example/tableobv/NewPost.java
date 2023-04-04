@@ -1,52 +1,79 @@
 package com.example.tableobv;
 
 public class NewPost {
-
-    private String imageID;
-    private String Title;
-    private String Price;
-    private String Tell;
-    private String Disc;
+    private String imageId;
+    private String title;
+    private String price;
+    private String tel;
+    private String disc;
     private String key;
+    private String uid;
+    private String time;
+    private String cat;
 
-    public String getImageID() {
-        return imageID;
+    public String getImageId() {
+        return imageId;
     }
 
-    public void setImageID(String imageID) {
-        this.imageID = imageID;
+    public void setImageId(String imageId) {
+        this.imageId = imageId;
     }
+
+    public String getCat() {
+        return cat;
+    }
+
+    public void setCat(String cat) {
+        this.cat = cat;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
 
     public String getTitle() {
-        return Title;
+        return title;
     }
 
     public void setTitle(String title) {
-        Title = title;
+        this.title = title;
     }
 
     public String getPrice() {
-        return Price;
+        return price;
     }
 
     public void setPrice(String price) {
-        Price = price;
+        this.price = price;
     }
 
-    public String getTell() {
-        return Tell;
+    public String getTel() {
+        return tel;
     }
 
-    public void setTell(String tell) {
-        Tell = tell;
+    public void setTel(String tel) {
+        this.tel = tel;
     }
 
     public String getDisc() {
-        return Disc;
+        return disc;
     }
 
     public void setDisc(String disc) {
-        Disc = disc;
+        this.disc = disc;
     }
 
     public String getKey() {

@@ -8,10 +8,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
 
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -22,6 +25,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.example.tableobv.adapter.DataSender;
+import com.example.tableobv.adapter.PostAdapter;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -29,22 +34,30 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.core.Tag;
 
-import java.nio.channels.AlreadyBoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+{
 
     private NavigationView nav_view;
     private DrawerLayout drawerLayout;
-    private TextView useremail;
     private FirebaseAuth mAuth;
+    private TextView userEmail;
     private AlertDialog dialog;
     private Toolbar toolbar;
-
+    private FloatingActionButton fb;
+    private PostAdapter.OnItemClickCustom onItemClickCustom;
+    private RecyclerView rcView;
+    private PostAdapter postAdapter;
+    private DataSender dataSender;
+    private DbManager dbManager;
+    public static String MAUTH;
+    private String current_cat = "машины";
 
 
     @Override
@@ -53,52 +66,95 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         init();
     }
-
-    @Override
-    protected void onStart(){
-        super.onStart();
-        getUserData();
-     }
-
-    public void onClickedit(View view)
+    protected void onResume()
     {
-        Intent i= new Intent(MainActivity.this, EditActivity.class);
-        startActivity(i);
+        super.onResume();
+        if(current_cat.equals("my_ads"))
+        {
+            dbManager.getMyAdsDataFromDb(mAuth.getUid());
+        }
+        else
+        {
+            dbManager.getDataFromDb(current_cat);
+        }
+
+
     }
     private void init()
     {
+        setOnItemClickCustom();
+        rcView=findViewById(R.id.icView);
+        rcView.setLayoutManager(new LinearLayoutManager(this));
+        List<NewPost> arrayPost = new ArrayList<>();
+        postAdapter=new PostAdapter(arrayPost,this, onItemClickCustom);
 
-        nav_view = findViewById(R.id.nav_view);
-        toolbar = findViewById(R.id.toolbar);
+        rcView.setAdapter(postAdapter);
+        fb = findViewById(R.id.fb);
+        nav_view=findViewById(R.id.nav_view);
         drawerLayout = findViewById(R.id.drawerLayout);
-
+        toolbar = findViewById(R.id.toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.toggle_open, R.string.toggle_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
         nav_view.setNavigationItemSelectedListener(this);
-        //drawerLayout = findViewById(R.id.);
-        useremail = nav_view.getHeaderView(0).findViewById(R.id.tvEmail);
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        userEmail = nav_view.getHeaderView(0).findViewById(R.id.tvEmail);
         mAuth = FirebaseAuth.getInstance();
-        DatabaseReference myRef = database.getReference("Table");
-        myRef.setValue("Hello, World!");
-        //test
+
+        getDataDB();
+        dbManager = new DbManager(dataSender, this);
+
+        //postAdapter.setDbManager(dbManager);
+
+    }
+    private void getDataDB()
+    {
+        dataSender = new DataSender() {
+            @Override
+            public void onDataRecived(List<NewPost> listData)
+            {
+                Collections.reverse(listData);
+                postAdapter.updateAdapter(listData);
+            }
+        };
+    }
+
+    private void setOnItemClickCustom()
+    {
+        onItemClickCustom = new PostAdapter.OnItemClickCustom() {
+            @Override
+            public void onItemSelected(int position) {
+
+
+            }
+        };
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        getUserData();
+
+
+    }
+
+    public void onClickEdit(View view)
+    {
+        Intent i = new Intent(MainActivity.this, EditActivity.class);
+        startActivity(i);
     }
     private void getUserData()
     {
-        mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-         if (currentUser != null)
+        if (currentUser != null)
         {
-            useremail.setText(currentUser.getEmail());
-        } else
+            userEmail.setText(currentUser.getEmail());
+            MAUTH = mAuth.getUid();
+        }
+        else
         {
-            useremail.setText(R.string.sign_in_or_sign_up);
+            userEmail.setText(R.string.sign_in_or_sign_up);
+            MAUTH = "";
         }
     }
-
-
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -106,114 +162,120 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (id)
         {
             case R.id.id_my_ads:
-                Toast.makeText(this, "Pressed id my ads", Toast.LENGTH_SHORT).show();
+                current_cat = "my_ads";
+                dbManager.getMyAdsDataFromDb(mAuth.getUid());
                 break;
             case R.id.id_cars_ads:
-                Toast.makeText(this, "Pressed id cars", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.id_dm_ads:
-                Toast.makeText(this, "Pressed id dm", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.smart:
-                Toast.makeText(this, "Pressed id smart", Toast.LENGTH_SHORT).show();
+                current_cat = "Машины";
+                dbManager.getDataFromDb("Машины");
                 break;
             case R.id.id_pc_ads:
-                Toast.makeText(this, "Pressed id pc", Toast.LENGTH_SHORT).show();
+                current_cat = "Компьютеры";
+                dbManager.getDataFromDb("Компьютеры");
+                break;
+            case R.id.idPhone:
+                current_cat = "Смартфоны";
+                dbManager.getDataFromDb("Смартфоны");
+                break;
+            case R.id.id_dm_ads:
+                current_cat = "Бытовая техника";
+                dbManager.getDataFromDb("Бытовая техника");
+                break;
+            case R.id.id_sing_up:
+                SignUpDialog(R.string.sign_up, R.string.sign_up_button, 0);
                 break;
             case R.id.id_sign_in:
-                signUpDialog(R.string.sig_in, R.string.sign_in_button, 1);
-                Toast.makeText(this, "Pressed id sign in", Toast.LENGTH_SHORT).show();
+                SignUpDialog(R.string.sig_in, R.string.sign_in_button, 1);
                 break;
             case R.id.id_sign_out:
                 signOut();
-                Toast.makeText(this, "Pressed id sign out", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.id_sing_up:
-                signUpDialog(R.string.sign_up, R.string.sign_up_button, 0);
-                Toast.makeText(this, "Pressed id sign up", Toast.LENGTH_SHORT).show();
                 break;
         }
-        return false;
+        return true;
     }
-    private void signUpDialog(int title, int btntitle, int index)
+    private void SignUpDialog(int title, int buttonTitle, int index)
     {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
-        View dialogview = inflater.inflate(R.layout.alert_layout_sign_up, null);
-        dialogBuilder.setView(dialogview);
-        TextView titletextview = dialogview.findViewById(R.id.tvAlertTitle);
-        titletextview.setText(title);
-        EditText idEmail = dialogview.findViewById(R.id.idemail);
-        EditText idPass = dialogview.findViewById(R.id.idpassword);
-        Button b = dialogview.findViewById(R.id.buttonsign_up);
-        b.setText(btntitle);
+        View dialogView = inflater.inflate(R.layout.alert_layout_sign_up, null);
+        dialogBuilder.setView(dialogView);
+        TextView titleTextView = dialogView.findViewById(R.id.tvAlertTitle);
+        titleTextView.setText(title);
+        Button b = dialogView.findViewById(R.id.buttonsign_up);
+        EditText edEmail = dialogView.findViewById(R.id.idemail);
+        EditText edPassword = dialogView.findViewById(R.id.idpassword);
+        b.setText(buttonTitle);
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (index == 0){
-                    signUp(idEmail.getText().toString(), idPass.getText().toString());
+                if (index == 0  )
+                {
+                    signUp(edEmail.getText().toString(), edPassword.getText().toString());
+
                 }
-                else {
-                    signIn(idEmail.getText().toString(), idPass.getText().toString());
+                else
+                {
+                    signIn(edEmail.getText().toString(), edPassword.getText().toString());
                 }
                 dialog.dismiss();
-
-
             }
         });
-
-
-
         dialog = dialogBuilder.create();
         dialog.show();
-    }
 
+
+    }
     private void signUp(String email, String password)
     {
-        if (!email.equals("") && !password.equals("")) {
+        if (!email.equals("") && !password.equals("")){
+
+
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                FirebaseUser user = mAuth.getCurrentUser();
+                                // Sign in success, update UI with the signed-in user's information
+
                                 getUserData();
-
-
                             } else {
-                                Log.w("MyLogMainAct", "createwithEP fail", task.getException());
-                                Toast.makeText(getApplicationContext(), "Auth failed", Toast.LENGTH_SHORT).show();
+                                // If sign in fails, display a message to the user.
+                                Log.w("MyLog", "signInWithCustomToken:failure", task.getException());
+                                Toast.makeText(getApplicationContext(), "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
         }
         else
         {
-            Toast.makeText(this, "Одно из полей пустое", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Email or password is empty!", Toast.LENGTH_SHORT).show();
         }
     }
-
-    private void signIn(String email, String password)
-    {
+    private void signIn(String email, String password) {
         if (!email.equals("") && !password.equals("")) {
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
+                                // Sign in success, update UI with the signed-in user's information
                                 getUserData();
                             } else {
-                                Log.w("MyLogAct", "signInfail", task.getException());
-                                Toast.makeText(getApplicationContext(), "Авторизация провалена", Toast.LENGTH_SHORT).show();
+                                // If sign in fails, display a message to the user.
+                                Log.w("MyLog", "signInWithCustomToken:failure", task.getException());
+                                Toast.makeText(getApplicationContext(), "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
-        } else {
-            Toast.makeText(this, "Одно из полей пустое", Toast.LENGTH_SHORT).show();
 
         }
+        else
+        {
+            Toast.makeText(this, "Email or password is empty!", Toast.LENGTH_SHORT).show();
+        }
     }
-
     private void signOut()
     {
         mAuth.signOut();
